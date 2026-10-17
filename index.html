@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CNCVerse Bridge · Kurulum</title>
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+    background: radial-gradient(1100px 600px at 15% -10%, #3a2a66 0%, transparent 55%),
+                radial-gradient(900px 500px at 110% 110%, #1d3a5f 0%, transparent 50%),
+                #0b0b13;
+    color: #e9e9f2; padding: 18px;
+  }
+  .card {
+    width: min(560px, 100%); background: rgba(20, 20, 32, .92);
+    border: 1px solid #2c2c44; border-radius: 18px; padding: 26px 24px;
+    box-shadow: 0 24px 70px rgba(0,0,0,.55);
+  }
+  .logo { width: 76px; height: 76px; border-radius: 18px; display: block; margin: 0 auto 14px; background: #ffffff22; }
+  h1 { font-size: 20px; text-align: center; margin: 0 0 4px; letter-spacing: .2px; }
+  .sub { text-align: center; color: #9a9ab0; font-size: 13px; margin-bottom: 8px; }
+  .status { text-align: center; font-size: 12px; color: #8d8da6; margin-bottom: 18px; min-height: 16px; }
+  .status.ok { color: #4ade80; }
+  .status.bad { color: #f87171; }
+  .urlbox { display: flex; gap: 8px; background: #0f0f1d; border: 1px solid #303050; border-radius: 12px; padding: 10px 12px; margin-bottom: 12px; }
+  .urlbox code { flex: 1; font-size: 12px; color: #c9c9e2; word-break: break-all; align-self: center; font-family: ui-monospace, Consolas, monospace; }
+  .btn { border: 0; border-radius: 12px; padding: 12px 16px; font-weight: 700; font-size: 14px; cursor: pointer; text-decoration: none; display: block; text-align: center; width: 100%; transition: transform .05s ease; }
+  .btn:active { transform: scale(.985); }
+  .primary { background: linear-gradient(135deg, #7c5cff, #a56bff); color: #fff; margin-bottom: 8px; }
+  .secondary { background: #23233a; color: #dcdcf0; border: 1px solid #33334f; }
+  .steps { margin-top: 18px; font-size: 13px; color: #b9b9cf; line-height: 1.6; }
+  .steps b { color: #fff; }
+  .note { margin-top: 16px; font-size: 12px; color: #8d8da6; border-top: 1px solid #2c2c44; padding-top: 12px; line-height: 1.55; }
+  a { color: #a56bff; text-decoration: none; }
+</style>
+</head>
+<body>
+  <main class="card">
+    <img class="logo" src="https://raw.githubusercontent.com/NivinCNC/CNCVerse-Bridge/refs/heads/main/logo.png" alt="CNCVerse Bridge">
+    <h1>CNCVerse Bridge</h1>
+    <div class="sub">Kişisel profil · Nuvio &amp; Stremio kurulumu</div>
+    <div class="status" id="status">Sunucu kontrol ediliyor…</div>
+
+    <div class="urlbox"><code id="url">https://cncverse.dpdns.org/u/pqb9urbx0tan6/manifest.json</code></div>
+
+    <button class="btn primary" id="copyBtn" type="button">📋 Nuvio için URL'yi kopyala</button>
+    <a class="btn secondary" href="stremio://cncverse.dpdns.org/u/pqb9urbx0tan6/manifest.json">▶️ Stremio'ya kur</a>
+
+    <div class="steps">
+      <b>Nuvio:</b> Ayarlar → Eklentiler → URL ile ekle → kopyaladığın adresi yapıştır.<br>
+      <b>Stremio:</b> Yukarıdaki butona bas; açılmazsa Addons bölümüne adresi yapıştır.
+    </div>
+
+    <div class="note">
+      Addon canlı sunucuda çalışır. GitHub'a kopyalanan statik manifest dosyaları çalışmaz;
+      kurulum her zaman yukarıdaki adresle yapılır. Ayarlar: <a href="https://cncverse.dpdns.org" target="_blank" rel="noopener">cncverse.dpdns.org</a>
+    </div>
+  </main>
+
+  <script>
+    (function () {
+      var MANIFEST = "https://cncverse.dpdns.org/u/pqb9urbx0tan6/manifest.json";
+      var statusEl = document.getElementById("status");
+      fetch(MANIFEST, { cache: "no-store" }).then(function (r) {
+        if (!r.ok) throw new Error("HTTP " + r.status);
+        return r.json();
+      }).then(function (m) {
+        var n = (m.catalogs || []).length;
+        statusEl.textContent = "✅ Sunucu çalışıyor — " + n + " katalog hazır";
+        statusEl.className = "status ok";
+      }).catch(function () {
+        statusEl.textContent = "⚠️ Sunucuya şu an ulaşılamadı — birkaç dakika sonra tekrar dene";
+        statusEl.className = "status bad";
+      });
+
+      document.getElementById("copyBtn").addEventListener("click", function () {
+        var btn = this, url = document.getElementById("url").textContent.trim();
+        function ok() {
+          var old = btn.textContent;
+          btn.textContent = "✅ Kopyalandı!";
+          setTimeout(function () { btn.textContent = old; }, 1500);
+        }
+        function fallback() {
+          var ta = document.createElement("textarea");
+          ta.value = url; ta.style.position = "fixed"; ta.style.opacity = "0";
+          document.body.appendChild(ta); ta.select();
+          try { document.execCommand("copy"); ok(); } catch (e) {}
+          document.body.removeChild(ta);
+        }
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(url).then(ok, fallback);
+        } else fallback();
+      });
+    })();
+  </script>
+</body>
+</html>
